@@ -139,25 +139,37 @@ end
 local ConfigItems = 
 {
     Toggle  = Config:add_item("Soul Snatch Toggle", 1),
-    Combo   = Config:add_item("Soul Snatch Combo", 0);
+    Combo   = Config:add_item("Soul Snatch Combo", 0),
     ComboItems = 
     {
         ComboItem("Pink"),
         ComboItem("Blue"),
         ComboItem("Green"),
         ComboItem("Orange"),
-    }
+    },
+    ReleaseCombo = Config:add_item("Soul Snatch ReleaseCombo", 0),
+    ReleaseComboItems = 
+    {
+        ComboItem("On Round End", 0),
+        ComboItem("On Death", 1),
+    },
 }
 
 local MenuItems = 
 {
     Toggle  = Menu:add_checkbox("Soul Snatcher", "Visuals", "Misc", "Beams", ConfigItems["Toggle"]),
-    Combo   = Menu:add_combo("Color Palette", "Visuals", "Misc", "Beams", ConfigItems["Combo"])
+    Combo   = Menu:add_combo("Color Palette", "Visuals", "Misc", "Beams", ConfigItems["Combo"]),
+    ReleaseCombo = Menu:add_multi_combo("Release Modes", "Visuals", "Misc", "Beams", ConfigItems["ReleaseCombo"]),
 }
 
 for i = 1, #ConfigItems["ComboItems"] do
     local CurrentItem = ConfigItems["ComboItems"][i]
     MenuItems["Combo"]:add_item(CurrentItem.Name, CurrentItem.ConfigItem) --Add all of our items to our combo
+end
+
+for i = 1, #ConfigItems["ReleaseComboItems"] do
+    local CurrentItem = ConfigItems["ReleaseComboItems"][i]
+    MenuItems["ReleaseCombo"]:add_item(CurrentItem.Name, CurrentItem.ConfigItem) --Add all of our items to our combo
 end
 
 local Colors = 
@@ -261,6 +273,9 @@ local function OnPaint()
         SoulSnatcher["ReleaseSouls"] = false
         Souls = {}
     return end
+    -- Dont render if we arent alive
+    if not SoulSnatcher["LocalPlayer"]:is_alive() then 
+        return end
 
     -- If the round hasnt ended then continue to update our position
     if not SoulSnatcher["ReleaseSouls"] then
@@ -271,7 +286,6 @@ local function OnPaint()
     local ColorPallete = Colors[ConfigItems["Combo"]:get_int() + 1]
     local Radius = SoulSnatcher["Radius"] 
     local Position = SoulSnatcher["HitboxPosition"]
-
     for SoulIndex = 1, #Souls do 
         local CurrentSoul = Souls[SoulIndex]
         -- Animate our round end movement
@@ -346,7 +360,9 @@ local function OnPlayerDeath(Event)
 
     -- If we died release them
     if Victim:get_index() == SoulSnatcher["LocalPlayer"]:get_index() then
-        Souls = {}
+        if ConfigItems["ReleaseComboItems"][2].ConfigItem:get_bool() then
+            Souls = {}
+        end
         return
     end
 
@@ -364,9 +380,13 @@ local function OnGameEvent(Event)
     if EventName == "player_death" then
         OnPlayerDeath(Event)
     elseif EventName == "round_end" then
-        SoulSnatcher["ReleaseSouls"] = true
+        if ConfigItems["ReleaseComboItems"][1].ConfigItem:get_bool() then
+            SoulSnatcher["ReleaseSouls"] = true
+        end
     elseif EventName == "round_start" then
-        Souls = {}
+        if ConfigItems["ReleaseComboItems"][1].ConfigItem:get_bool() then
+            Souls = {}
+        end
         SoulSnatcher["ReleaseSouls"] = false
     end
 end
