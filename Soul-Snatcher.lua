@@ -219,11 +219,11 @@ local SoulSnatcher =
     Radius              = 20,
     MaxZRadius          = 60,
     Length              = (math.pi * 2) * 0.1,
-    
     GrowTime            = 0.5,
 
-    RoundEnded          = false,
+    ReleaseSouls        = false,
     HitboxPosition      = 0,
+
     -- 360 degrees of radians
     Radian360           = math.pi * 2,
 }
@@ -258,16 +258,12 @@ local function OnPaint()
 
     -- If we have untoggled or we are invalid then release souls and reset round end state
     if not ConfigItems["Toggle"]:get_bool() or not SoulSnatcher["LocalPlayer"] then
-        SoulSnatcher["RoundEnded"] = false
+        SoulSnatcher["ReleaseSouls"] = false
         Souls = {}
     return end
-    
-    if not SoulSnatcher["LocalPlayer"]:is_alive() then
-        SoulSnatcher["RoundEnded"] = true
-    end
 
     -- If the round hasnt ended then continue to update our position
-    if not SoulSnatcher["RoundEnded"] then
+    if not SoulSnatcher["ReleaseSouls"] then
         SoulSnatcher["HitboxPosition"] = SoulSnatcher["LocalPlayer"]:get_hitbox_pos(2)
     end
 
@@ -279,7 +275,7 @@ local function OnPaint()
     for SoulIndex = 1, #Souls do 
         local CurrentSoul = Souls[SoulIndex]
         -- Animate our round end movement
-        if not SoulSnatcher["RoundEnded"] then
+        if not SoulSnatcher["ReleaseSouls"] then
             CurrentSoul["EndRoundTime"] = 0
         else
             local Increment = ((1 / CurrentSoul["Velocity"]) * Globals.frametime)
@@ -298,10 +294,10 @@ local function OnPaint()
 
         if CurrentSoul["KillTime"] > 1 and CurrentSoul["EndRoundTime"] ~= 1 then
             -- If the round has endex then lerp this souls position
-            if SoulSnatcher["RoundEnded"] then
-                local x = Lerp(CurrentSoul["Position"].x, SoulSnatcher["HitboxPosition"].x, 1 - CurrentSoul["EndRoundTime"])
-                local y = Lerp(CurrentSoul["Position"].y, SoulSnatcher["HitboxPosition"].y, 1 - CurrentSoul["EndRoundTime"])
-                local z = Lerp(CurrentSoul["Position"].z + 2000, SoulSnatcher["HitboxPosition"].z, 1 - CurrentSoul["EndRoundTime"])
+            if SoulSnatcher["ReleaseSouls"] then
+                local x = Lerp(CurrentSoul["Position"].x, SoulSnatcher["HitboxPosition"].x, Ease(1 - CurrentSoul["EndRoundTime"]))
+                local y = Lerp(CurrentSoul["Position"].y, SoulSnatcher["HitboxPosition"].y, Ease(1 - CurrentSoul["EndRoundTime"]))
+                local z = Lerp(CurrentSoul["Position"].z + 2000, SoulSnatcher["HitboxPosition"].z, Ease(1 - CurrentSoul["EndRoundTime"]))
                 Position = Vector(x, y, z)
             end
             for i = AngleIndex, AngleLength, SoulSnatcher["LineIncrement"] do
@@ -348,12 +344,19 @@ local function OnPlayerDeath(Event)
     local Attacker = EntityList:get_player_from_id(Event:get_int("attacker"))
     local Victim = EntityList:get_player_from_id(Event:get_int("userid"))
 
-    -- Check if we were attacker and not a victim
-    if Attacker:get_index() ~= SoulSnatcher["LocalPlayer"]:get_index() or Victim == SoulSnatcher["LocalPlayer"]:get_index() then
+    -- If we died release them
+    if Victim:get_index() == SoulSnatcher["LocalPlayer"]:get_index() then
+        Souls = {}
+        return
+    end
+
+    -- Check if we were attacker
+    if Attacker:get_index() ~= SoulSnatcher["LocalPlayer"]:get_index() then
         return end
+
     -- Set the position to their pelvis cuz why not
     local Position = Victim:get_hitbox_pos(2)
-    Souls[#Souls + 1] = NewSoul(Position)
+    Souls[#Souls + 1] = NewSoul(Position and Position or Vector(0, 0, 0))
 end
 
 local function OnGameEvent(Event)
@@ -361,16 +364,17 @@ local function OnGameEvent(Event)
     if EventName == "player_death" then
         OnPlayerDeath(Event)
     elseif EventName == "round_end" then
-        SoulSnatcher["RoundEnded"] = true
+        SoulSnatcher["ReleaseSouls"] = true
     elseif EventName == "round_start" then
         Souls = {}
-        SoulSnatcher["RoundEnded"] = false
+        SoulSnatcher["ReleaseSouls"] = false
     end
 end
 
 Events:add_event("round_end")
 Events:add_event("round_start")
 Events:add_event("player_death")
+
 
 Callbacks:add("paint", OnPaint)
 Callbacks:add("events", OnGameEvent)
