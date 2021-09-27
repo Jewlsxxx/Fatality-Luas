@@ -391,10 +391,15 @@ local function OnGameEvent(Event)
     end
 end
 
+local function OnLevelInit() 
+    SoulSnatcher["ReleaseSouls"] = false
+    Souls = {}
+end
+
 Events:add_event("round_end")
 Events:add_event("round_start")
 Events:add_event("player_death")
 
-
 Callbacks:add("paint", OnPaint)
 Callbacks:add("events", OnGameEvent)
+Callbacks:add("level_init", OnLevelInit)
