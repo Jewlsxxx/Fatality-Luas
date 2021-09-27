@@ -234,7 +234,7 @@ local function NewSoul(Position)
     return
     {
         Position        = Position,
-        Velocity        = math.random() * 10,
+        Velocity        = Clamp(math.random() * 2, 0.5, 999),
         EndRoundTime    = 0,
         KillTime        = 0,
         zRadius         = Clamp(math.random() * SoulSnatcher["MaxZRadius"], 5, SoulSnatcher["MaxZRadius"])
