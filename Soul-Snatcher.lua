@@ -158,8 +158,8 @@ local ConfigItems =
 local MenuItems = 
 {
     Toggle  = Menu:add_checkbox("Soul Snatcher", "Visuals", "Misc", "Beams", ConfigItems["Toggle"]),
-    Combo   = Menu:add_combo("Color Palette", "Visuals", "Misc", "Beams", ConfigItems["Combo"]),
-    ReleaseCombo = Menu:add_multi_combo("Release Modes", "Visuals", "Misc", "Beams", ConfigItems["ReleaseCombo"]),
+    Combo   = Menu:add_combo("Soul Palette", "Visuals", "Misc", "Beams", ConfigItems["Combo"]),
+    ReleaseCombo = Menu:add_multi_combo("Release Souls", "Visuals", "Misc", "Beams", ConfigItems["ReleaseCombo"]),
 }
 
 for i = 1, #ConfigItems["ComboItems"] do
