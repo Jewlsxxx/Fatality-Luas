@@ -238,6 +238,14 @@ local SoulSnatcher =
 
     -- 360 degrees of radians
     Radian360           = math.pi * 2,
+
+    -- Get avg frametime for smoother lines
+    -- How many frames we will sample
+    SampleCount = 1000,
+    -- Index to loop through the frames to refresh info
+    LoopIndex = 1,
+    -- Table of frametimes
+    FrameTimes = {},
 }
 
 local Souls = {}
@@ -262,6 +270,20 @@ SoulSnatcher["Update"] = function ()
     if SoulSnatcher["RotationAngle"] == SoulSnatcher["Radian360"] then
         SoulSnatcher["RotationAngle"] = 0 end
     
+
+    SoulSnatcher["FrameTimes"][SoulSnatcher["LoopIndex"]] = Globals.frametime
+    SoulSnatcher["LoopIndex"] = SoulSnatcher["LoopIndex"] + 1
+    if SoulSnatcher["LoopIndex"] > SoulSnatcher["SampleCount"] then
+        SoulSnatcher["LoopIndex"] = 1
+    end
+end
+
+SoulSnatcher["GetAvgFrametime"] = function ()
+    local TmpFrameTime = 0
+    for i = 1, #SoulSnatcher["FrameTimes"] do
+        TmpFrameTime = TmpFrameTime + SoulSnatcher["FrameTimes"][i]
+    end
+    return TmpFrameTime / #SoulSnatcher["FrameTimes"]
 end
 
 local function OnPaint()
@@ -277,6 +299,7 @@ local function OnPaint()
     if not SoulSnatcher["LocalPlayer"]:is_alive() then 
         return end
 
+    local AvgFrametime = SoulSnatcher.GetAvgFrametime() * 1.5
     -- If the round hasnt ended then continue to update our position
     if not SoulSnatcher["ReleaseSouls"] then
         SoulSnatcher["HitboxPosition"] = SoulSnatcher["LocalPlayer"]:get_hitbox_pos(2)
@@ -324,7 +347,7 @@ local function OnPaint()
                 local HSV = RgbToHsv(WantedColor.r, WantedColor.g, WantedColor.b)
                 local NewRGB = HsvToRgb(HSV.h * 360, HSV.s, HSV.v * Clamp(Percentage * 1.5, 0, 1))
 
-                DebugOverlay:add_line_overlay( P1, P2, Color(NewRGB.r, NewRGB.g, NewRGB.b).c(), false, Globals.frametime * 1.9)
+                DebugOverlay:add_line_overlay( P1, P2, Color(NewRGB.r, NewRGB.g, NewRGB.b).c(), false, AvgFrametime)
             end
         end
 
@@ -345,7 +368,7 @@ local function OnPaint()
         local FirstPosition = VectorSubtract(CurrentSoul["Position"], VectorMutl(Forward, (FirstPointDist * Ease(CurrentSoul["KillTime"] - LineLength))))
         local SecondPosition = VectorSubtract(CurrentSoul["Position"], VectorMutl(Forward, (FirstPointDist * Clamp(Ease(CurrentSoul["KillTime"]), 0, 1))))
             
-        DebugOverlay:add_line_overlay(FirstPosition, SecondPosition, WantedColor.c(), true, Globals.frametime * 1.9)
+        DebugOverlay:add_line_overlay(FirstPosition, SecondPosition, WantedColor.c(), true, AvgFrametime)
         ::continue::
     end
 end
