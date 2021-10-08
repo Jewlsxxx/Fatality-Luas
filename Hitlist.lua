@@ -212,9 +212,6 @@ local function FormatMissReason(Shot)
         if not EntityList:get_player(Shot.victim):is_alive() then
             return "Death"
         end
-        if Shot.shot_info.extrapolated then
-            return "Extrapolation"
-        end
         return "Spread"
     end
     return "-" -- Fallback
