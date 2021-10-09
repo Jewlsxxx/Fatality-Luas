@@ -122,6 +122,7 @@ local function UpdateDpi()
 
     Hitlist.ItemSpacing = Vector2D(math.floor(20 * Scale), math.floor(3 * Scale));
     Hitlist.Padding     = Vector2D(math.floor(5 * Scale), math.floor(5 * Scale));
+    Hitlist.BackgroundSpacing = math.floor(5 * Scale)
     Fonts.Verdana       =  Renderer:create_font("verdana", math.floor(12 * Scale), 400, false );
 end
 
