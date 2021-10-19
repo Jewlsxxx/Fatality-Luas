@@ -155,8 +155,13 @@ local LocationStats =
     
     HasSaved            = false;
 
-    Style               = {};
+    Position            = Vector();
+    Held                = false;
+    ClickedOff          = false;
+    GrabOffset          = Vector();
+    SavePosition        = false;
 
+    Style               = {};
     Colors = 
     {
         Grab            = Color(38, 33, 72);    -- Color of the grab area
@@ -178,7 +183,6 @@ local LocationStats =
     };
 
     MapName             = nil;
-    Locations           = {};
     LocationBundles     = {};
     TypeTimes           = {};
 
@@ -260,6 +264,9 @@ function LocationStats:Initalize()
         Database:write({}, self.DatabaseName)
     else
         self.LocationBundles = json.decode(DatabaseRead)
+        if self.LocationBundles.Position then
+            self.Position = Vector(self.LocationBundles.Position)
+        end
     end
     -- Get our formated map name
     self.MapName = self:FormatMapName(Engine:get_map_name())
@@ -473,6 +480,58 @@ function LocationStats:BundleAnimValues()
     }
 end
 
+function LocationStats:IsPointInBounds(Point, Min, Max)
+    return Point.x >= Min.x and Point.x <= Max.x and Point.y >= Min.y and Point.y <= Max.y;
+end
+
+function LocationStats:HandleMovement()
+    -- Dont handle antything if we dont have a weapon or any stats toggled
+    if not self.CurrentWeaponType or (not ConfigItems.InfoTypeItems[2].ConfigItem:get_bool() and not ConfigItems.InfoTypeItems[1].ConfigItem:get_bool())then
+        return end
+
+    local TmpHeaderSize = Render:text_size(self.Font, "A Weapon Name")
+    if not self.HasCustomFont then
+        TmpHeaderSize.y = TmpHeaderSize.y + self.Style.Padding * 2
+    end
+    local Width = 160 * self.Dpi
+
+    local CursorPos = Input:get_mouse_pos()
+    local Max = Vector(self.Position.x + Width, self.Position.y + TmpHeaderSize.y)
+    if Input:is_key_down(0x1) then
+        -- Check whether we are in bounds or was in bounds when we clicked
+        -- This fixes the issue where you stop dragging if you move to fast
+        local PointInBounds = self:IsPointInBounds(CursorPos, self.Position, Max)
+
+        -- Check if point is out of bounds and we are not already dragging
+        if not PointInBounds and not self.Held then
+            self.ClickedOff = true;
+        end
+        
+        -- If this click was off the hitlist then dont run any movement
+        if self.ClickedOff then
+            goto continue end
+
+        if (PointInBounds or self.Held) then
+            if not self.Held then
+                self.GrabOffset = Vector(CursorPos.x - self.Position.x, CursorPos.y - self.Position.y) -- We arent holding aka first click. Set our grab delta
+            end
+            -- We are holding now
+            self.Held = true 
+            -- Move position based of grab delta
+            self.Position = Vector(CursorPos.x - self.GrabOffset.x, CursorPos.y - self.GrabOffset.y)
+        end
+        ::continue::
+    else
+        -- We are no longer pressing mouse one stop holding
+        self.Held = false
+        self.ClickedOff = false;
+    end
+    -- Clamp out position. Stay on screen!!!
+    self.Position.x = Clamp( self.Position.x, 0, self.ScreenSize.x - Width)
+    self.Position.y = Clamp( self.Position.y, 0, self.ScreenSize.y - TmpHeaderSize.y)
+    self.LocationBundles.Position = self.Position
+end
+
 function LocationStats:DrawBundle(BundleInfo, Animations, Type, BundleIndex)
     local LocationState = ConfigItems.InfoTypeItems[2].ConfigItem:get_bool()
     local WorldLocationState = ConfigItems.InfoTypeItems[3].ConfigItem:get_bool()
@@ -534,7 +593,7 @@ function LocationStats:DrawBundle(BundleInfo, Animations, Type, BundleIndex)
         local Alpha =  math.floor(255 * math.min(Clamp(Animations.InfoTime, 0, 1), Animations.TypeTime))
 
         local TypeSize  = Render:text_size(self.Font, Type)
-        local Position  = Vector(self.ScreenSize.x / 192, self.ScreenSize.y / 1.8)
+        local Position  = self.Position
         local Size      = Vector(160 * self.Dpi, 3 * self.Dpi + (TypeSize.y + (self.HasCustomFont and 0 or Style.Padding * 1.25)) * ItemAmount)
         local BeginHeader       = string.format("%s [", Type)
         local MidHeader         = string.format("Location %i", BundleIndex)
@@ -628,7 +687,7 @@ function LocationStats:DrawGlobal(GlobalInfo, Animations, Type)
     local Alpha =  math.floor(255 * math.min(Animations.InfoTime, Animations.TypeTime))
 
     local TypeSize  = Render:text_size(self.Font, Type)
-    local Position  = Vector(self.ScreenSize.x / 192, self.ScreenSize.y / 1.8)
+    local Position  = self.Position
     local Size      = Vector(160 * self.Dpi, 3 * self.Dpi + (TypeSize.y + (self.HasCustomFont and 0 or Style.Padding * 1.25)) * ItemAmount)
 
     local BeginHeader       = string.format("%s [", Type)
@@ -792,7 +851,7 @@ end
 function LocationStats:Paint() 
     self.LocalPlayer = EntityList:get_localplayer()
 
-    if not self.LocalPlayer then
+    if not self.LocalPlayer or not self.LocalPlayer:is_alive() then
         -- Nil our weapon type to avoid incorrect weapontype 
         self.CurrentWeaponType = nil
         return
@@ -815,6 +874,9 @@ function LocationStats:Paint()
     {
         Padding = 4 * self.Dpi;
     }
+
+    -- Handle the position of info
+    self:HandleMovement()
 
     -- Check nil table
     if not self.LocationBundles[self.MapName] then
