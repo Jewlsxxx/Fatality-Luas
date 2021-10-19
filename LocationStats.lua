@@ -159,7 +159,6 @@ local LocationStats =
     Held                = false;
     ClickedOff          = false;
     GrabOffset          = Vector();
-    SavePosition        = false;
 
     Style               = {};
     Colors = 
