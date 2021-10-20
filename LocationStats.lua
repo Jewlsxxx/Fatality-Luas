@@ -9,7 +9,6 @@ local Globals           = csgo.interface_handler:get_global_vars()
 local Console           = csgo.interface_handler:get_cvar()
 local Events            = csgo.interface_handler:get_events()
 local Engine            = csgo.interface_handler:get_engine_client()
-local Inspect           = require("(Misc)TableInspect")
 
 -- Color of the print header "[ Location Stats ]"
 local PrintColor        = csgo.color(66, 135, 245, 255)
