@@ -21,8 +21,7 @@ local References =
     YawAdd          = Menu:get_reference("Rage", "Anti-Aim", "General", "Add");
     FakeType        = Menu:get_reference("Rage", "Anti-Aim", "General", "Fake type");
     FakeAmt         = Menu:get_reference("Rage", "Anti-Aim", "General", "Fake amount");
-
-
+    FreeStandFake   = Menu:get_reference("Rage", "Anti-Aim", "General", "Freestand Fake");
 }
 local PrevStates = {}
 
@@ -30,7 +29,8 @@ local MenuTypes =
 {
     YawAdd = "int";
     FakeType = "int";
-    FakeAmt = "int"
+    FakeAmt = "int";
+    FreeStandFake = "int"
 }
 
 local ResetStates = false
@@ -78,7 +78,7 @@ local function OnPaint()
         References.Jitter:set_bool(false)
         References.FakeType:set_int(2)
         References.FakeAmt:set_int(-100)
-        
+        References.FreeStandFake:set_int(0)
 
         if TickcountModulo == 15 or TickcountModulo == 17  then
             References.YawAdd:set_int(Invert and -60 or 90)
