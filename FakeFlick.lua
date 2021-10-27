@@ -77,17 +77,13 @@ local function OnPaint()
         References.AAOverride:set_bool(false)
         References.Jitter:set_bool(false)
         References.FakeType:set_int(2)
-
-        if Invert then
-            References.FakeAmt:set_int(100)
-        else
-            References.FakeAmt:set_int(-100)
-        end
+        References.FakeAmt:set_int(-100)
+        
 
         if TickcountModulo == 15 or TickcountModulo == 17  then
-            References.YawAdd:set_int(Invert and -90 or 90)
+            References.YawAdd:set_int(Invert and -60 or 90)
         else
-            References.YawAdd:set_int(0)
+            References.YawAdd:set_int(Invert and 30 or 0)
         end
 
         local LowAlphaBlack = csgo.color( 0, 0, 0, 100)
