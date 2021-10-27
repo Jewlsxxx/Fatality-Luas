@@ -20,6 +20,7 @@ local References =
     YawAddCheck     = Menu:get_reference("Rage", "Anti-Aim", "General", "Yaw add");
     YawAdd          = Menu:get_reference("Rage", "Anti-Aim", "General", "Add");
     FakeType        = Menu:get_reference("Rage", "Anti-Aim", "General", "Fake type");
+    FakeAmt         = Menu:get_reference("Rage", "Anti-Aim", "General", "Fake amount");
 
 
 }
@@ -29,6 +30,7 @@ local MenuTypes =
 {
     YawAdd = "int";
     FakeType = "int";
+    FakeAmt = "int"
 }
 
 local ResetStates = false
@@ -45,7 +47,7 @@ local function OnPaint()
         end
         local IsKeyDown     = Input:is_key_down(i);
         Keys[i].Pressed     = Keys[i].Held ~= nil and (not Keys[i].Held and IsKeyDown)
-        Keys[i].Held        = IsKeyDown
+        Keys[i].Held        = Keys[i].Held == nil and false or IsKeyDown
         Keys[i].Released    = Keys[i].OldHeld and not Keys[i].Held
         Keys[i].OldHeld     = Keys[i].Held
         if Keys[i].Pressed then 
@@ -74,7 +76,13 @@ local function OnPaint()
         References.YawAddCheck:set_bool(true)
         References.AAOverride:set_bool(false)
         References.Jitter:set_bool(false)
-        References.FakeType:set_int(0)
+        References.FakeType:set_int(2)
+
+        if Invert then
+            References.FakeAmt:set_int(100)
+        else
+            References.FakeAmt:set_int(-100)
+        end
 
         if TickcountModulo == 15 or TickcountModulo == 17  then
             References.YawAdd:set_int(Invert and -90 or 90)
