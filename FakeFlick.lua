@@ -41,6 +41,9 @@ local ResetStates = false
 local Keys = {}
 
 local IndFont = Render:create_font("verdana", 28, 900, true);
+local function Clamp(Value, Min, Max)
+    return Value < Min and Min or (Value > Max and Max or Value)
+end
 
 local function OnPaint()
     -- From my gui
