@@ -22,6 +22,8 @@ local References =
     FakeType        = Menu:get_reference("Rage", "Anti-Aim", "General", "Fake type");
     FakeAmt         = Menu:get_reference("Rage", "Anti-Aim", "General", "Fake amount");
     FreeStandFake   = Menu:get_reference("Rage", "Anti-Aim", "General", "Freestand Fake");
+    FLMode   = Menu:get_reference("Rage", "Anti-Aim", "Fakelag", "Mode");
+
 }
 local PrevStates = {}
 
@@ -30,7 +32,8 @@ local MenuTypes =
     YawAdd = "int";
     FakeType = "int";
     FakeAmt = "int";
-    FreeStandFake = "int"
+    FreeStandFake = "int";
+    FLMode = "int";
 }
 
 local ResetStates = false
@@ -72,13 +75,14 @@ local function OnPaint()
 
     if EPeekFreestand then
         ResetStates = true
-        References.DoubleTap:set_bool(true)
+        References.DoubleTap:set_bool(false)
         References.YawAddCheck:set_bool(true)
         References.AAOverride:set_bool(false)
         References.Jitter:set_bool(false)
         References.FakeType:set_int(2)
-        References.FakeAmt:set_int(-100)
+        References.FakeAmt:set_int(Invert and 100 or -100)
         References.FreeStandFake:set_int(0)
+        References.FLMode:set_int(0)
 
         if TickcountModulo == 15 then
             References.YawAdd:set_int(Invert and -90 or 90)
