@@ -1,4 +1,5 @@
 local Menu              = fatality.menu
+local Config            = fatality.config
 local Input             = fatality.input
 local Render            = fatality.render
 local Callbacks         = fatality.callbacks
@@ -11,6 +12,12 @@ local Key = 0x4
 local InvertKey = 0x05
 
 -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+
+local ComboConfigItem = Config:add_item("Fake Flick Config", 0)
+local Combo = Menu:add_combo("Fake flick type", "Rage", "Anti-aim", "Fakelag", ComboConfigItem)
+Combo:add_item("Safe", ComboConfigItem)
+Combo:add_item("Fast", ComboConfigItem)
+
 
 local References = 
 {
@@ -87,7 +94,12 @@ local function OnPaint()
         References.FreeStandFake:set_int(0)
         References.FLMode:set_int(0)
 
-        if TickcountModulo == 15 then
+        local Flick = TickcountModulo <= 2
+        if ComboConfigItem:get_int() == 0 then
+            Flick = TickcountModulo == 15
+        end
+
+        if Flick then
             References.YawAdd:set_int(Invert and -90 or 90)
         else
             References.YawAdd:set_int(0)
