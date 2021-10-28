@@ -80,10 +80,10 @@ local function OnPaint()
         References.FakeAmt:set_int(-100)
         References.FreeStandFake:set_int(0)
 
-        if TickcountModulo == 15 or TickcountModulo == 17  then
-            References.YawAdd:set_int(Invert and -60 or 90)
+        if TickcountModulo == 15 then
+            References.YawAdd:set_int(Invert and -90 or 90)
         else
-            References.YawAdd:set_int(Invert and 30 or 0)
+            References.YawAdd:set_int(0)
         end
 
         local LowAlphaBlack = csgo.color( 0, 0, 0, 100)
@@ -103,7 +103,6 @@ local function OnPaint()
         Render:rect_filled(SidePos[1] + SideSpacing * 2, SidePos[2], 2, SideHeight,  LowAlphaBlack)
 
         Render:rect_filled(SidePos[1] + (SideSpacing * (Invert and 0 or 2)), SidePos[2], 2, SideHeight, Blue)
-
     else
         if ResetStates then
             for i, v in pairs(References) do
