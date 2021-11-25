@@ -279,9 +279,10 @@ function g_Vector.__ge(First, Second)
     return First:length() >= Second:length()
 end
 
-function g_Vector:coppied()
+function g_Vector:copied()
     return g_Vector.new(self.x, self.y, self.z)
 end
+
 
 function g_Vector:csgo()
     return csgo.vector3(self.x, self.y, self.z)
@@ -318,7 +319,7 @@ function g_Vector:scaled(flScale)
         return nil, error("Invalid parameter #1 vector:scaled")
     end
 
-    return self:coppied() * flScale
+    return self:copied() * flScale
 end
 
 function g_Vector:unpack()
@@ -349,7 +350,7 @@ function g_Vector:normalize()
 end
 
 function g_Vector:normalized()
-    local Ret = self:coppied()
+    local Ret = self:copied()
     Ret:normalize()
     return Ret
 end
