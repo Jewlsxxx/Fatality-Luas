@@ -384,7 +384,7 @@ function g_Vector:reset(x, y, z)
     self.z = z or 0
 end
 
-function g_Vector:calc_angle(Other)
+function g_Vector:angle(Other)
     if not g_Vector:valid(Other) then
         return 0, error("Invalid parameter #1 vector:calc_angle")
     end
@@ -407,4 +407,5 @@ print = function(...)
     _print(szPrintStr)
 end
 setmetatable(g_Vector, { __call = function(Table, ...) return g_Vector.new(...) end })
+
 return g_Vector
