@@ -385,6 +385,10 @@ function g_Vector:reset(x, y, z)
     self.z = z or 0
 end
 
+function g_Vector:lerp(Other, flTime)
+    return self + (Other - self) * flTime
+end
+
 function g_Vector:angle(Other)
     if not g_Vector:valid(Other) then
         return 0, error("Invalid parameter #1 vector:calc_angle")
