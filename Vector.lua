@@ -3,6 +3,10 @@ local _print = print
 local g_Vector = {}
 g_Vector.__index = g_Vector
 
+local function Clamp(v, mn, mx)
+    return v < mn and mn or v > mx and mx or v
+end
+
 function g_Vector.new(x, y, z)
     local szType = type(x)
 
@@ -385,6 +389,36 @@ function g_Vector:reset(x, y, z)
     self.z = z or 0
 end
 
+function g_Vector:clamp(flMin, flMax)
+    self.x = Clamp(self.x, flMin, flMin)
+    self.y = Clamp(self.y, flMin, flMin)
+    self.z = Clamp(self.z, flMin, flMin)
+end
+
+function g_Vector:floor(flMin, flMax)
+    self.x = math.floor(self.x)
+    self.y = math.floor(self.y)
+    self.z = math.floor(self.z)
+end
+
+function g_Vector:ceil(flMin, flMax)
+    self.x = math.ceil(self.x)
+    self.y = math.ceil(self.y)
+    self.z = math.ceil(self.z)
+end
+
+function g_Vector:floored()
+    local Ret = self:copied()
+    Ret:floor()
+    return Ret
+end
+
+function g_Vector:ceiled()
+    local Ret = self:copied()
+    Ret:ceil()
+    return Ret
+end
+
 function g_Vector:lerp(Other, flTime)
     return self + (Other - self) * flTime
 end
@@ -412,5 +446,4 @@ print = function(...)
     _print(szPrintStr)
 end
 setmetatable(g_Vector, { __call = function(Table, ...) return g_Vector.new(...) end })
-
 return g_Vector
