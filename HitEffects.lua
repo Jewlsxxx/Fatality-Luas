@@ -5,7 +5,6 @@ local Callbacks         = fatality.callbacks
 local EntityList        = csgo.interface_handler:get_entity_list()
 local Globals           = csgo.interface_handler:get_global_vars()
 local DebugOverlay      = csgo.interface_handler:get_debug_overlay()
-package.loaded[ [[libs\vector]] ] = nil
 local Success, Vector   = pcall(require, "libs\\vector")
 if not Success then
     error("\nMissing vector library. Get it at https://fatality.win/threads/developers-extended-vector-api.9671/ and follow the download guide.")
