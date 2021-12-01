@@ -93,7 +93,7 @@ local function g_GameEvent(Event)
         local bMaster, bLocalOnly   = g_cfgMaster:get_bool(),       g_cfgLocalOnly:get_bool()
         local pLocalPlayer, pPlayer = EntityList:get_localplayer(), EntityList:get_player_from_id(Event:get_int("userid"))
  
-        if not bMaster or not pLocalPlayer or not pPlayer or (bLocalOnly and pPlayer:get_index() ~= pLocalPlayer:get_index()) then
+        if not bMaster or not pLocalPlayer or not pPlayer or pPlayer:is_dormant() or (bLocalOnly and pPlayer:get_index() ~= pLocalPlayer:get_index()) then
             return end
 
         local EyePos = pPlayer:get_eye_pos()
