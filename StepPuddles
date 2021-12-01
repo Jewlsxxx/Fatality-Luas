@@ -1,0 +1,110 @@
+local Menu              = fatality.menu
+local Config            = fatality.config
+local Callbacks         = fatality.callbacks
+local DebugOverlay      = csgo.interface_handler:get_debug_overlay()
+local EntityList        = csgo.interface_handler:get_entity_list()
+local Events            = csgo.interface_handler:get_events()
+local Globals           = csgo.interface_handler:get_global_vars()
+local Success, Vector   = pcall(require, "libs\\vector")
+if not Success then
+    error("\nMissing vector library. Get it at https://fatality.win/threads/developers-extended-vector-api.9671/ and follow the download guide.")
+end
+
+local g_cfgMaster = Config:add_item("Step Circles master", 1)
+local g_cfgLocalOnly = Config:add_item("Step Circles local only", 1)
+local g_cfgColor = Config:add_item("Step Circles Color", 1)
+local g_cfgLife = Config:add_item("Step Circles Life", 1)
+local g_cfgSize = Config:add_item("Step Circles Size", 15)
+
+Menu:add_checkbox("Step puddles", "VISUALS", "MISC", "Various", g_cfgMaster)
+Menu:add_checkbox("Local only", "VISUALS", "MISC", "Various", g_cfgLocalOnly)
+
+local g_uiCombo = Menu:add_combo("Step Color", "VISUALS", "MISC", "Various", g_cfgColor)
+Menu:add_slider("Duration", "VISUALS", "MISC", "Various", g_cfgLife, 1, 20, 1)
+Menu:add_slider("Size", "VISUALS", "MISC", "Various", g_cfgSize, 5, 30, 1)
+
+g_uiCombo:add_item("Rainbow", g_cfgColor)
+g_uiCombo:add_item("White", g_cfgColor)
+g_uiCombo:add_item("Red", g_cfgColor)
+g_uiCombo:add_item("Green", g_cfgColor)
+g_uiCombo:add_item("Blue", g_cfgColor)
+g_uiCombo:add_item("Sky Blue", g_cfgColor)
+g_uiCombo:add_item("Purple", g_cfgColor)
+g_uiCombo:add_item("Pink", g_cfgColor)
+
+local iPoints = 64
+local flTwoPi = math.pi * 2
+local g_Steps = {}
+
+local function Draw3DCircle(vecOrigin, flRadius, flAnimTime, pColor)
+
+    for i = 0, flTwoPi, flTwoPi / iPoints do
+        local flRadiusScaled = flRadius * flAnimTime
+        local iNextAngle = i + (flTwoPi / iPoints)
+        if iNextAngle > flTwoPi then iNextAngle = 0 end
+
+        local P1 = vecOrigin + Vector((math.cos(i) * flRadiusScaled), (math.sin(i) * flRadiusScaled), 0)
+        local P2 = vecOrigin + Vector((math.cos(iNextAngle) * flRadiusScaled), (math.sin(iNextAngle) * flRadiusScaled), 0)
+
+        DebugOverlay:add_line_overlay(P1:csgo(), P2:csgo(), pColor, true, Globals.frametime * 2)
+    end
+end
+
+local function g_Paint()
+    if not EntityList:get_localplayer() then
+        g_Steps = {}
+        return
+    end
+    for i, pStep in pairs(g_Steps) do 
+        -- Check for nil and valid m_flAnimTime
+        if pStep.m_flAnimTime < 1 then
+            local iColorType = g_cfgColor:get_int()
+            local iAlpha = math.floor((1 - pStep.m_flAnimTime) * 255)
+            -- You need to do this in a loop because you cannot access alpha after creating the color without using a wrapper
+            local pColor = csgo.color(255, 255, 255, iAlpha)
+            if iColorType == 0 then      -- Rainbow
+                pColor = csgo.color(math.floor( math.sin( Globals.realtime * 2) * 127 + 128 ), math.floor( math.sin( Globals.realtime * 2 + 2 ) * 127 + 128 ), math.floor( math.sin( Globals.realtime * 2 + 4 ) * 127 + 128 ), iAlpha) 
+            elseif iColorType == 1 then  -- White
+                pColor = csgo.color(255, 255, 255, iAlpha)
+            elseif iColorType == 2 then  -- Red
+                pColor = csgo.color(255, 0, 0, iAlpha)
+            elseif iColorType == 3 then  -- Green
+                pColor = csgo.color(150, 255, 0, iAlpha)
+            elseif iColorType == 4 then  -- Blue
+                pColor = csgo.color(0, 100, 255, iAlpha)
+            elseif iColorType == 5 then  -- Sky Blue
+                pColor = csgo.color(135, 180, 235, iAlpha)
+            elseif iColorType == 6 then  -- Purple
+                pColor = csgo.color(93, 66, 245, iAlpha)
+            elseif iColorType == 7 then  -- Pink
+                pColor = csgo.color(255, 0, 72, iAlpha)
+            end
+
+            Draw3DCircle(pStep.m_vecOrigin, g_cfgSize:get_int(), pStep.m_flAnimTime, pColor)
+            pStep.m_flAnimTime = pStep.m_flAnimTime + (1 / (g_cfgLife:get_int() / 10)) * Globals.frametime
+        else
+            g_Steps[i] = nil
+        end
+    end
+end
+
+local function g_GameEvent(Event)
+    if Event:get_name() == "player_footstep" then
+        local bMaster, bLocalOnly   = g_cfgMaster:get_bool(),       g_cfgLocalOnly:get_bool()
+        local pLocalPlayer, pPlayer = EntityList:get_localplayer(), EntityList:get_player_from_id(Event:get_int("userid"))
+ 
+        if not bMaster or not pLocalPlayer or not pPlayer or (bLocalOnly and pPlayer:get_index() ~= pLocalPlayer:get_index()) then
+            return end
+
+        local EyePos = pPlayer:get_eye_pos()
+        g_Steps[#g_Steps + 1] = 
+        {
+            m_flAnimTime = 0;
+            m_vecOrigin = Vector(EyePos.x, EyePos.y, EyePos.z - 64)
+        }
+    end
+end
+
+Events:add_event("player_footstep")
+Callbacks:add("paint", g_Paint)
+Callbacks:add("events", g_GameEvent)
