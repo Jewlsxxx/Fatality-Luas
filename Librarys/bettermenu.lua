@@ -7,6 +7,12 @@ local BetterMenu =
     items = {},
 }
 
+BetterMenu.__index = BetterMenu
+
+function BetterMenu.new()
+    return setmetatable({items = {}}, BetterMenu)
+end
+
 function BetterMenu:init(szName)
     if not szName then
         error("Better Menu! Initialization failed! Nil prefix.", 2)
@@ -170,4 +176,4 @@ function BetterMenu:add_button(szName, szTabName, szSubtabName, szGroupName, pFu
     return Menu:add_button(szName, szTabName, szSubtabName, szGroupName, pFunc)
 end
 
-return BetterMenu
+return BetterMenu.new()
