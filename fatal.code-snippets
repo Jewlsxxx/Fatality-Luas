@@ -305,7 +305,7 @@
 
     "fatality.win entity list":{
         "prefix":   ["entitylist", "entity_list"],
-        "body":     "${1:entitylist}:${2|get_player,get_player_from_id,get_from_handle,get_max_players,get_max_entities,get_localplayer|}"
+        "body":     "${1:entitylist}:${2|get_player,get_entity,get_player_from_id,get_from_handle,get_max_players,get_max_entities,get_localplayer|}"
     },
 
     "fatality.win get player":{
