@@ -367,6 +367,16 @@ function g_Vector:dot(Other)
     return ((self.x * Other.x) + (self.y * Other.y) + (self.z * Other.z))
 end
 
+function g_Vector:to_screen()
+    local vCsgo = self:csgo()
+
+    if vCsgo:to_screen() then 
+        return vCsgo.x, vCsgo.y
+    end
+    
+    return nil
+end
+
 function g_Vector:dist(Other)
     if not g_Vector:valid(Other) then
         return 0, error("Invalid parameter #1 vector:dist")
