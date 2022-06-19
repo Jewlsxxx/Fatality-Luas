@@ -19,6 +19,7 @@ function BetterMenu:init(szName)
     end
 
     self.prefix = szName
+    self.items  = {}
 end
 
 -- Purpose:
