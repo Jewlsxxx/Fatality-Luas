@@ -16,13 +16,10 @@ end
 
 local Surface   = CheckLib("surface",       "https://fatality.win/threads/developers-render-extention.10402/")
 local Netvar    = CheckLib("netvar",        "https://fatality.win/threads/developers-netvar-fix.10393/")
-local Vector    = CheckLib("vector",        "https://fatality.win/threads/developers-extended-vector-api.9671/")
+
 local SmokeColor    = Config:add_item("grenade_radius_smoke",   0)
 local MolotovColor  = Config:add_item("grenade_radius_molotov", 0)
 local AlphaSlider   = Config:add_item("grenade_radius_slider",  50)
-
-
-
 
 local function InitCombo(combo, cfg_item)
     combo:add_item("Off", cfg_item)
@@ -56,7 +53,7 @@ local Style     =
     RevTime     = 2,
     RevPercent  = 0.5,
     CircleSize  = 150,
-    CircleIncr  = Math.PI2 / 60 
+    CircleIncr  = Math.PI2 / 32
 }
 
 local Colors = 
@@ -110,54 +107,61 @@ Drawing.paint = function()
             goto continue
         end
 
-        local vOrigin       = Vector(Netvar.GetVector(Index, "DT_BaseEntity", "m_vecOrigin")) - Vector(0, 0, 3)
+        local x, y, z       = Netvar.GetVector(Index, "DT_BaseEntity", "m_vecOrigin")
         local EffectBegin   = Netvar.GetInt(Index, IsSmoke and "DT_SmokeGrenadeProjectile" or "DT_Inferno", IsSmoke and "m_nSmokeEffectTickBegin" or "m_nFireEffectTickBegin")
         local nTimeAlive    = Math.TickToTime(Globals.tickcount - EffectBegin)
         local Lifespan      = IsSmoke and SMOKELIFE or MOLOTOVLIFE
         local Color         = IsSmoke and Drawing.SmokeColor or Drawing.MolotovColor
 
 
-        local flFadeIn = Math.Clamp(Style.FadeIn - (Style.FadeIn - nTimeAlive), 0, Style.FadeIn) / Style.FadeIn
+        local flFadeIn  = Math.Clamp(Style.FadeIn - (Style.FadeIn - nTimeAlive), 0, Style.FadeIn) / Style.FadeIn
         local flFadeOut = Math.Clamp(Lifespan - nTimeAlive, 0, Style.FadeOut) / Style.FadeOut
 
-        Drawing.Circle3D(vOrigin, math.min(flFadeIn, flFadeOut), flFadeIn, Color[1], Color[2], Color[3])
+        Drawing.Circle3D({x = x, y = y, z = z - 3}, math.min(flFadeIn, flFadeOut), flFadeIn, Color[1], Color[2], Color[3])
         ::continue::
     end
 
 end
 
 Drawing.Circle3D = function(Position, AlphaMult, SizeMultiplier, r, g, b)
-
     local RevolutionPercentage = (Globals.realtime % Style.RevTime) / Style.RevTime
     local Angle = RevolutionPercentage * Math.PI2
+    local FinalAngle = Angle + Math.PI2 * Style.RevPercent
+    local Radius = (Style.CircleSize * SizeMultiplier)
 
-    for i = Angle, Angle + Math.PI2 * Style.RevPercent, Style.CircleIncr do
-        local P1    = Position + Vector(math.cos(i), math.sin(i), 0) * (Style.CircleSize * SizeMultiplier)
-        local P2    = Position + Vector(math.cos(i + Style.CircleIncr), math.sin(i + Style.CircleIncr), 0) * (Style.CircleSize * SizeMultiplier)
+    for i = Angle, FinalAngle, Style.CircleIncr do
+        local P1    = csgo.vector3(Position.x + math.cos(i) * Radius, Position.y + math.sin(i) * Radius, Position.z)
+        local P2    = csgo.vector3(Position.x + math.cos(i + Style.CircleIncr) * Radius, Position.y + math.sin(i + Style.CircleIncr) * Radius, Position.z)
 
-        local x1, y1 = P1:to_screen()
-        local x2, y2 = P2:to_screen()
-
-        if x1 and x2 then
-            Surface.Line(x1, y1, x2, y2, r, g, b, math.floor(255 * AlphaMult))
+        if P1:to_screen() and P2:to_screen() then
+            Surface.Line(P1.x, P1.y, P2.x, P2.y, r, g, b, math.floor(255 * AlphaMult))
         end
     end
 
+    local Origin = csgo.vector3(Position.x, Position.y, Position.z)
+    if not Origin:to_screen() then
+        return end
+
+    local P1 = nil
     for i = 0, Math.PI2, Style.CircleIncr do
         local NextAngle = (i + Style.CircleIncr) > Math.PI2 and 0 or i + Style.CircleIncr
 
-        local P1    = Position + Vector(math.cos(i), math.sin(i), 0) * (Style.CircleSize * SizeMultiplier)
-        local P2    = Position + Vector(math.cos(NextAngle), math.sin(NextAngle), 0) * (Style.CircleSize * SizeMultiplier)
-        local P3    = Position
-
-        local x1, y1 = P1:to_screen()
-        local x2, y2 = P2:to_screen()
-        local x3, y3 = P3:to_screen()
-
-        if x1 and x2 and x3 then
-            Surface.TriangleFilled(x1, y1, x2, y2, x3, y3, r, g, b, math.floor(Drawing.Alpha * AlphaMult))
+        if not P1 then
+            P1 = csgo.vector3(Position.x + math.cos(i) * Radius, Position.y + math.sin(i) * Radius, Position.z)
+            if not P1:to_screen() then
+                goto continue;
+            end
         end
+
+        local P2 = csgo.vector3(Position.x + math.cos(NextAngle) * Radius, Position.y + math.sin(NextAngle) * Radius, Position.z)
+
+        if P2:to_screen() then
+            Surface.TriangleFilled(P1.x, P1.y, P2.x, P2.y, Origin.x, Origin.y, r, g, b, math.floor(Drawing.Alpha * AlphaMult))
+        end
+        P1 = P2
+        ::continue::
     end
+
 end
 
 Math.TickToTime = function (x)
