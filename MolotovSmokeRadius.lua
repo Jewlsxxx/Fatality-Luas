@@ -149,6 +149,7 @@ Drawing.Circle3D = function(Position, AlphaMult, SizeMultiplier, r, g, b)
         if not P1 then
             P1 = csgo.vector3(Position.x + math.cos(i) * Radius, Position.y + math.sin(i) * Radius, Position.z)
             if not P1:to_screen() then
+                P1 = nil
                 goto continue;
             end
         end
@@ -157,8 +158,10 @@ Drawing.Circle3D = function(Position, AlphaMult, SizeMultiplier, r, g, b)
 
         if P2:to_screen() then
             Surface.TriangleFilled(P1.x, P1.y, P2.x, P2.y, Origin.x, Origin.y, r, g, b, math.floor(Drawing.Alpha * AlphaMult))
+            P1 = P2
+        else
+            P1 = nil
         end
-        P1 = P2
         ::continue::
     end
 
